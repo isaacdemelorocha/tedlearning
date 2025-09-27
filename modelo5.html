@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TED Learning</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Variáveis de Cor (Tema TED) */
+        :root {
+            --ted-red: #E62B1E;
+            --ted-black: #000000;
+            --ted-white: #FFFFFF;
+            --ted-gray-dark: #222222;
+            --ted-gray-medium: #4A4A4A;
+            --ted-gray-light: #F5F5F5;
+            --feedback-correct-bg: #d1e7dd;
+            --feedback-correct-text: #0f5132;
+            --feedback-incorrect-bg: #f8d7da;
+            --feedback-incorrect-text: #842029;
+        }
+
+        /* Estilos Gerais */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--ted-gray-light);
+        }
+
+        /* Layout Principal */
+        .main-layout {
+            display: flex;
+            height: calc(100vh - 56px); /* Altura total da tela menos a altura da navbar */
+        }
+
+        /* Barra de Navegação Superior (Header) */
+        .navbar.bg-custom {
+            background-color: var(--ted-black) !important;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            color: var(--ted-red) !important;
+        }
+
+        /* Barra Lateral (Sidebar) */
+        .sidebar {
+            width: 350px;
+            background-color: var(--ted-gray-dark);
+            color: var(--ted-white);
+            padding: 1rem;
+            
+            /* NOVO: Flexbox para empurrar o item para o rodapé */
+            display: flex;
+            flex-direction: column;
+
+            border-right: 1px solid var(--ted-gray-medium);
+        }
+        .sidebar-content {
+            overflow-y: auto; /* Adiciona scroll se o conteúdo for maior */
+            flex-grow: 1;
+        }
+        
+        /* Itens do Menu Lateral (Aulas) */
+        .lesson-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            background: none; /* Remove fundo padrão de botão */
+            border: none; /* Remove borda padrão de botão */
+            color: var(--ted-white); /* Cor do texto */
+            text-align: left; /* Alinha texto à esquerda */
+        }
+        .lesson-item:hover {
+            background-color: var(--ted-gray-medium);
+        }
+        .lesson-item.active {
+            background-color: var(--ted-red);
+            color: var(--ted-white);
+            font-weight: bold;
+        }
+        .lesson-title {
+            display: flex;
+            align-items: center;
+        }
+        .lesson-title i {
+            margin-right: 10px;
+        }
+
+        /* Acordeão do Módulo */
+        .accordion-button {
+            background-color: var(--ted-gray-dark);
+            color: var(--ted-white);
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: var(--ted-gray-medium);
+            color: var(--ted-white);
+        }
+        .accordion-button:focus {
+            box-shadow: 0 0 0 0.25rem rgba(230, 43, 30, 0.25);
+        }
+        .accordion-body {
+            background-color: var(--ted-gray-dark);
+            color: #adb5bd;
+        }
+
+        /* Conteúdo Principal */
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            background-color: var(--ted-white);
+        }
+        .lesson-content {
+            display: none; /* Esconde todo o conteúdo por padrão */
+        }
+        .lesson-content.active {
+            display: block; /* Mostra apenas o conteúdo ativo */
+        }
+        .ratio iframe {
+            border-radius: 8px;
+        }
+
+        /* Estilos do Quiz */
+        .quiz-form {
+            background-color: var(--ted-gray-light) !important;
+            border-color: #ddd !important;
+        }
+        .quiz-question {
+            margin-bottom: 1.5rem;
+        }
+        .btn-primary {
+            background-color: var(--ted-red);
+            border-color: var(--ted-red);
+            font-weight: bold;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .btn-primary:hover {
+            background-color: #c52318;
+            border-color: #c52318;
+        }
+        .form-check-input:checked {
+            background-color: var(--ted-red);
+            border-color: var(--ted-red);
+        }
+        
+        /* Feedback do Quiz (Correto/Incorreto) */
+        .feedback {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .feedback.correct {
+            background-color: var(--feedback-correct-bg);
+            color: var(--feedback-correct-text);
+        }
+        .feedback.incorrect {
+            background-color: var(--feedback-incorrect-bg);
+            color: var(--feedback-incorrect-text);
+        }
+
+        /* Rodapé */
+        .footer {
+            padding: 1rem;
+            text-align: center;
+            color: #6c757d;
+            background-color: var(--ted-gray-light);
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <nav class="navbar navbar-dark bg-custom">
+            <div class="container-fluid">
+                <a class="navbar-brand"  target="_blank" href="https://www.youtube.com/ted">TED Learning</a>
+                <span class="navbar-text">{Seu nome}, bem-vindo(a)!</span>
+            </div>
+        </nav>
+    </header>
+
+    <div class="main-layout">
+        <aside class="sidebar">
+            <div class="sidebar-content">
+                <h5 class="mb-3">Conteúdos</h5>
+                <div class="accordion" id="courseAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">1. Módulo de IA</button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#courseAccordion">
+                            <div class="accordion-body">
+                                <button class="lesson-item" data-content-id="content-aula-1">
+                                    <span class="lesson-title"><i class="fa-regular fa-circle-play" aria-hidden="true"></i>Aula 1: IA e a Humanidade</span>
+                                </button>
+                                <button class="lesson-item" data-content-id="content-aula-2">
+                                    <span class="lesson-title"><i class="fa-regular fa-circle-play" aria-hidden="true"></i> Aula 2: O Futuro da IA</span>
+                                </button>
+                                <button class="lesson-item" data-content-id="content-aula-3">
+                                    <span class="lesson-title"><i class="fa-regular fa-circle-play" aria-hidden="true"></i> Aula 3: A Criatividade da IA</span>
+                                </button>
+                                <hr class="text-secondary">
+                                <button class="lesson-item" data-content-id="content-quiz">
+                                    <span class="lesson-title"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Quiz Final</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <hr class="text-secondary">
+                <button class="lesson-item active" data-content-id="content-dashboard">
+                    <span class="lesson-title"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Dashboard [Looker Studio]</span>
+                </button>
+            </div>
+            
+        </aside>
+
+        <main class="main-content">
+            
+            <section class="lesson-content" id="content-dashboard">
+                <h4 class="mb-3">Dashboard</h4>
+                <p>Bem-vindo(a) ao seu painel de controle! <p></p>Aqui você poderá visualizar os resultados gerais.</p>
+                <div class="p-4 rounded bg-light border">
+                   <iframe width="100%" height="800" src="https://lookerstudio.google.com/embed/reporting/5b5a3dcb-4c47-48b8-abfc-cb1c61b99445/page/XviZF" frameborder="0" style="border:0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                </div>
+            </section>
+
+            <section class="lesson-content active" id="content-aula-1">
+                <h4 class="mb-3">Aula 1: IA e a Humanidade</h4>
+                <p>Nesta aula, exploramos a interação entre a inteligência artificial e a sociedade, e como a tecnologia está moldando nosso futuro.</p>
+                <div class="ratio ratio-16x9 mb-4"><iframe src="https://www.youtube.com/embed/ZmjvI5hwhqw?si=R3MwiVYXDJuhCiLo" title="Palestra TED sobre IA e a Humanidade" frameborder="0" allowfullscreen></iframe></div>
+            </section>
+
+            <section class="lesson-content" id="content-aula-2">
+                <h4 class="mb-3">Aula 2: O Futuro da IA</h4>
+                <p>Uma análise sobre o pensamento crítico necessário para navegar na era da inteligência artificial e o impacto dela em nossas vidas.</p>
+                <div class="ratio ratio-16x9 mb-4"><iframe src="https://www.youtube.com/embed/C38xlWnkezQ?si=Y3HYCZGfgd5SFLKS" title="Palestra TED sobre o Futuro da IA" frameborder="0" allowfullscreen></iframe></div>
+            </section>
+
+            <section class="lesson-content" id="content-aula-3">
+                 <h4 class="mb-3">Aula 3: A Criatividade da IA</h4>
+                <p>Descubra como a IA não está apenas otimizando tarefas, mas também se tornando uma ferramenta poderosa para a criatividade humana.</p>
+                <div class="ratio ratio-16x9 mb-4"><iframe src="https://www.youtube.com/embed/4LW5QHbHPqA?si=zjAVMlV_8pqlFX02" title="Palestra TED sobre a Criatividade da IA" frameborder="0" allowfullscreen></iframe></div>
+            </section>
+
+            <section class="lesson-content" id="content-quiz">
+                <h4>Quiz Final: Teste seu Conhecimento</h4>
+                <p>Responda às perguntas abaixo, baseadas nas três aulas do módulo, para validar seu aprendizado.</p>
+                <hr>
+                <form class="quiz-form p-4 border rounded" id="consolidated-quiz">
+                    
+                    <h5 class="mb-3">Perguntas da Aula 1</h5>
+                    <div class="quiz-question">
+                        <p><b>1. Qual é a velocidade que o robô semiautônomo, apresentado como exemplo, consegue atingir?</b></p>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q1_1" id="q1_1_a" value="correct"><label class="form-check-label" for="q1_1_a">1,8 metros por segundo</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q1_1" id="q1_1_b" value="incorrect"><label class="form-check-label" for="q1_1_b">7 quilômetros por hora</label></div>
+                        <div class="feedback"></div>
+                    </div>
+                    <div class="quiz-question">
+                        <p><b>2. O que representa a "terceira evolução" da IA mencionada na palestra?</b></p>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q1_2" id="q1_2_a" value="incorrect"><label class="form-check-label" for="q1_2_a">A conversa com dispositivos somente programados</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q1_2" id="q1_2_b" value="correct"><label class="form-check-label" for="q1_2_b">A parte dos avatares</label></div>
+                        <div class="feedback"></div>
+                    </div>
+                    <div class="quiz-question">
+                         <p><b>3. Qual meio de comunicação é usado para controlar robôs colaborativos no exemplo prático?</b></p>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q1_3" id="q1_3_a" value="correct"><label class="form-check-label" for="q1_3_a">O Whatsapp</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q1_3" id="q1_3_b" value="incorrect"><label class="form-check-label" for="q1_3_b">O Orelhão</label></div>
+                        <div class="feedback"></div>
+                    </div>
+                    <hr class="my-4">
+
+                    <h5 class="mb-3">Perguntas da Aula 2</h5>
+                    <div class="quiz-question">
+                        <p><b>4. Segundo a palestra, qual é uma das principais habilidades a se desenvolver na era da IA?</b></p>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q2_1" id="q2_1_a" value="incorrect"><label class="form-check-label" for="q2_1_a">A eficiência</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q2_1" id="q2_1_b" value="correct"><label class="form-check-label" for="q2_1_b">O pensamento crítico</label></div>
+                        <div class="feedback"></div>
+                    </div>
+                    <div class="quiz-question">
+                        <p><b>5. Qual elemento da natureza é usado como analogia para a IA na história de Ailton Krenak?</b></p>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q2_2" id="q2_2_a" value="correct"><label class="form-check-label" for="q2_2_a">Um novo rio</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q2_2" id="q2_2_b" value="incorrect"><label class="form-check-label" for="q2_2_b">Uma jangada</label></div>
+                        <div class="feedback"></div>
+                    </div>
+                    <div class="quiz-question">
+                        <p><b>6. Qual autor, crítico da sociedade tecnológica, é citado no início da palestra?</b></p>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q2_3" id="q2_3_a" value="incorrect"><label class="form-check-label" for="q2_3_a">Gilberto Gil</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q2_3" id="q2_3_b" value="correct"><label class="form-check-label" for="q2_3_b">Ailton Krenak</label></div>
+                        <div class="feedback"></div>
+                    </div>
+                    <hr class="my-4">
+                    
+                    <h5 class="mb-3">Perguntas da Aula 3</h5>
+                    <div class="quiz-question">
+                        <p><b>7. Em que ano a Volvo inventou o cinto de segurança de três pontos?</b></p>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q3_1" id="q3_1_a" value="correct"><label class="form-check-label" for="q3_1_a">1959</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q3_1" id="q3_1_b" value="incorrect"><label class="form-check-label" for="q3_1_b">1973</label></div>
+                        <div class="feedback"></div>
+                    </div>
+                    <div class="quiz-question">
+                        <p><b>8. Qual animal era considerado o mais eficiente em locomoção antes do ser humano com uma bicicleta?</b></p>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q3_2" id="q3_2_a" value="correct"><label class="form-check-label" for="q3_2_a">O Condor</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q3_2" id="q3_2_b" value="incorrect"><label class="form-check-label" for="q3_2_b">O Cavalo</label></div>
+                        <div class="feedback"></div>
+                    </div>
+                    <div class="quiz-question">
+                        <p><b>9. A IA Generativa é composta por algoritmos de qual tipo de aprendizado?</b></p>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q3_3" id="q3_3_a" value="correct"><label class="form-check-label" for="q3_3_a">Algoritmos de machine learning</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="q3_3" id="q3_3_b" value="incorrect"><label class="form-check-label" for="q3_3_b">Algoritmos de freio ABS</label></div>
+                        <div class="feedback"></div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 mt-4">Enviar Respostas do Módulo</button>
+                </form>
+                 <footer class="footer mt-4">
+                    <p class="mb-0">Desenvolvido por <a href="https://www.linkedin.com/in/isaaac/" target="_blank" rel="noopener noreferrer">Isaac de Melo Rocha</a></p>
+                </footer> 
+            </section>
+        </main>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- LÓGICA PARA ALTERNAR O CONTEÚDO DAS AULAS E QUIZ ---
+            const lessonItems = document.querySelectorAll('.lesson-item');
+            const contentSections = document.querySelectorAll('.lesson-content');
+
+            lessonItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    lessonItems.forEach(i => i.classList.remove('active'));
+                    contentSections.forEach(c => c.classList.remove('active'));
+
+                    this.classList.add('active');
+                    const contentId = this.getAttribute('data-content-id');
+                    document.getElementById(contentId).classList.add('active');
+                });
+            });
+
+            // --- LÓGICA PARA O ENVIO DO QUIZ ---
+            const consolidatedForm = document.getElementById('consolidated-quiz');
+            consolidatedForm.addEventListener('submit', function(event) {
+                event.preventDefault(); 
+
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbydKhGrIItTy31iZ1UB_9Kuk4Iaaf1WTq9J-_iQqt4oLGbZZ1xI7DLaoeLDFoleQpv0/exec';
+                const submitButton = consolidatedForm.querySelector('button[type="submit"]');
+                const formData = new FormData(consolidatedForm);
+                const questionBlocks = consolidatedForm.querySelectorAll('.quiz-question');
+
+                // --- NOVO: Captura a data e hora do Brasil ---
+                const now = new Date();
+                const options = { timeZone: 'America/Sao_Paulo' };
+                const dataBR = now.toLocaleDateString('pt-BR', options); // Formato: DD/MM/AAAA
+                const horaBR = now.toLocaleTimeString('pt-BR', options); // Formato: HH:MM:SS
+                
+                // --- NOVO: Adiciona a data e hora ao formulário que será enviado ---
+                formData.append('data_submissao', dataBR);
+                formData.append('hora_submissao', horaBR);
+                
+                // Valida cada pergunta e mostra o feedback na tela
+                questionBlocks.forEach(block => {
+                    const feedbackElement = block.querySelector('.feedback');
+                    const radioButtons = block.querySelectorAll('input[type="radio"]');
+                    const userAnswer = block.querySelector('input[type="radio"]:checked');
+
+                    feedbackElement.style.display = 'block';
+                    feedbackElement.classList.remove('correct', 'incorrect');
+                    
+                    if (userAnswer) {
+                        if (userAnswer.value === 'correct') {
+                            feedbackElement.textContent = 'Correto! ✔️';
+                            feedbackElement.classList.add('correct');
+                        } else {
+                            feedbackElement.textContent = 'Incorreto. ❌';
+                            feedbackElement.classList.add('incorrect');
+                        }
+                    } else {
+                        feedbackElement.textContent = 'Por favor, selecione uma resposta.';
+                        feedbackElement.classList.add('incorrect');
+                        formData.set(radioButtons[0].name, 'Não respondida');
+                    }
+                });
+
+                submitButton.disabled = true;
+                submitButton.textContent = 'A guardar...';
+
+                // Envia os dados (incluindo data e hora) para o Google Script
+                fetch(scriptURL, { method: 'POST', body: formData })
+                    .then(response => {
+                        console.log('Sucesso!', response);
+                        submitButton.textContent = 'Enviado com Sucesso!';
+                        setTimeout(() => { 
+                            submitButton.disabled = false; 
+                            submitButton.textContent = 'Enviar Respostas do Módulo'; 
+                        }, 3000);
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error.message);
+                        alert('Ocorreu um erro ao guardar as suas respostas.');
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Enviar Respostas do Módulo';
+                    });
+            });
+        });
+    </script>
+</body>
+</html>

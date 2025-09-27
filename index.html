@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Página Inicial - Curso Interativo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* 🎨 Paleta TED */
+    :root {
+      --ted-red: #E62B1E;
+      --ted-red-hover: #c52318;
+      --ted-white: #ffffff;
+      --ted-bg: #f8f9fa;
+      --ted-text: #212529;
+    }
+
+    /* 🌍 Base */
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: var(--ted-bg);
+      font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+      color: var(--ted-text);
+      text-align: center;
+    }
+
+    .container-choice {
+      width: 100%;
+      max-width: 520px;
+      padding: 1.5rem;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      font-weight: 700;
+      color: var(--ted-red);
+      font-size: 2rem;
+    }
+
+    p {
+      margin-bottom: 2rem;
+      font-size: 1.2rem;
+    }
+
+    /* 🔘 Botões */
+    .btn-choice {
+      display: block;
+      width: 100%;
+      margin: 1rem 0;
+      background-color: var(--ted-red);
+      border: none;
+      color: var(--ted-white);
+      font-weight: 600;
+      border-radius: 16px;
+      transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .btn-choice:hover,
+    .btn-choice:focus {
+      background-color: var(--ted-red-hover);
+      transform: scale(1.03);
+      outline: none;
+    }
+
+    .btn-choice:active {
+      transform: scale(0.97);
+    }
+
+    /* 📱 Mobile: botões grandes, um em cima do outro */
+    @media (max-width: 767px) {
+      .btn-choice {
+        font-size: 1.6rem;
+        padding: 2rem;
+        margin: 1.5rem 0;
+      }
+    }
+
+    /* 💻 Desktop: botões lado a lado */
+    @media (min-width: 768px) {
+      .btn-group-custom {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+      }
+      .btn-choice {
+        font-size: 1.3rem;
+        padding: 1.5rem 2rem;
+        width: 240px;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container-choice" role="main">
+    <h1>Bem-vindo ao Curso</h1>
+    <p>Escolha a experiência que deseja acessar:</p>
+    <div class="btn-group-custom" role="navigation" aria-label="Escolha de visualização">
+      <a href="mobile.html" class="btn-choice" role="button" aria-label="Acessar versão Mobile">📱 Versão Mobile</a>
+      <a href="desktop.html" class="btn-choice" role="button" aria-label="Acessar versão Desktop">💻 Versão Desktop</a>
+    </div>
+  </main>
+</body>
+</html>
